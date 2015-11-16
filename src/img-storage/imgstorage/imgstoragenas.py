@@ -191,7 +191,7 @@ class NasDaemon:
 
 
         self.pool = ThreadPool(processes=self.SYNC_WORKERS)
-        with sqlite3.connect(self.SQLITE_DB) as con:
+        with sqlite4.connect(self.SQLITE_DB) as con:
             cur = con.cursor()
             cur.execute('''CREATE TABLE IF NOT EXISTS zvol_calls(
                           zvol TEXT PRIMARY KEY NOT NULL,
@@ -201,7 +201,9 @@ class NasDaemon:
                           zvol TEXT PRIMARY KEY NOT NULL,
                           zpool TEXT,
                           iscsi_target TEXT UNIQUE,
-                          remotehost TEXT)''')
+                          remotehost TEXT,
+                          sync_interval INT,
+                          last_sync INT)''')
             cur.execute('''CREATE TABLE IF NOT EXISTS sync_queue(
                           zvol TEXT PRIMARY KEY NOT NULL,
                           zpool TEXT NOT NULL,
@@ -611,7 +613,7 @@ class NasDaemon:
         with sqlite3.connect(self.SQLITE_DB) as con:
             try:
                 cur = con.cursor()
-                cur.execute('''SELECT zvol, zpool, remotehost 
+                cur.execute('''SELECT zvol, zpool, remotehost, sync_interval 
                                 FROM zvols 
                                 WHERE iscsi_target IS NULL 
                                 and remotehost IS NOT NULL 
@@ -619,7 +621,8 @@ class NasDaemon:
                             )
                 rows = cur.fetchall()
                 for row in rows:
-                    (zvol, zpool, remotehost) = row
+                    (zvol, zpool, remotehost, sync_interval) = row
+                    if(sync_interval and time.time()-sync_interval>)
                     cur.execute('INSERT or IGNORE INTO sync_queue VALUES(?,?,?,0,0,?)'
                                 , [zvol, zpool, remotehost,
                                 time.time()])
